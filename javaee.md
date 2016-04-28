@@ -1,7 +1,8 @@
 - 2014-04-28——获取oracle数据表最新更新时间
 
-解决方法来自stackoverflow的[问题](http://stackoverflow.com/questions/265122/how-to-find-out-when-an-oracle-table-was-updated-the-last-time)，简单来说，
-就是通过通过如下语句实现：
+Google搜索关键字`oracle get table update time`
+
+解决方法来自stackoverflow的[问题](http://stackoverflow.com/questions/265122/how-to-find-out-when-an-oracle-table-was-updated-the-last-time)，简单来说，就是通过通过如下语句实现：
 
 ```sql
 SELECT SCN_TO_TIMESTAMP(MAX(ora_rowscn)) from myTable;
