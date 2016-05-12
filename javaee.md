@@ -35,7 +35,7 @@ public static String getMD5OfFile(File file){
   } catch (Exception e){
     e.printStackTrace();
   } finally {
-    if (null != null){
+    if (null != fis){
       try {
         fis.close();
       } catch (Exception e){
