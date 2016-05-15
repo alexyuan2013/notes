@@ -46,4 +46,14 @@ public static String getMD5OfFile(File file){
   return value;
 }
 ```
+- 2016-05-12——PL/SQL配置备忘
 
+首先随便下个PL/SQL的绿色版，然后记得下载一个Oracle的客户端，即[Instant Client](http://www.oracle.com/technetwork/topics/winsoft-085727.html)，解压即可用。
+
+首次打开PL/SQL，先不点击登陆，直接点取消，进入软件，在`Tools/Preferences`中配置Client的解压路径到如下项目：
+
+> Oracle Home(empty is autodetect)->D:\instantclient_11_2 
+
+> OCI library(empty is autodetect)->D:\instantclient_11_2\oci.dll 
+
+最后再次启动PL/SQL，填入用户名，密码，数据库地址及实例即可。
