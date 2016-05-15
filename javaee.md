@@ -57,3 +57,10 @@ public static String getMD5OfFile(File file){
 > OCI library(empty is autodetect)->D:\instantclient_11_2\oci.dll 
 
 最后再次启动PL/SQL，填入用户名，密码，数据库地址及实例即可。
+
+中文乱码：
+
+> 需要设置plsql字符集，plsql默认加载的是windows系统变量的nls_lang的字符集，所以去我的电脑中，右键选择“属性”，再选择“系统高级设置”，再
+> 选择“环境变量”，再选择“系统变量”，新建或者修改NLS_LANG</br>
+> 变量名：NLS_LANG</br>
+> 变量值：SIMPLIFIED CHINESE_CHINA.ZHS16GBK</br>
