@@ -10,6 +10,15 @@ SELECT SCN_TO_TIMESTAMP(MAX(ora_rowscn)) from myTable;
 
 基本实现了在不用数据库触发器的情况下，通过定时执行以上语句，获取数据表更新的最新时间，从而执行相应的操作。
 
+2016-05-19 补充：
+
+上面的语句对长时间不更新的表会报错，这个在上面的问题回答中已经提到，只是当时没注意，具体的解决方式暂时没看明白，把原回答贴到下边：
+
+>Works as long as last update to your table hasn't been too long ago. Else you get an error, so it's safest to first do a: left join sys.smon_scn_time tiemposmax on myTable.ora_rowscn <= tiemposmax.scn and then apply SCN_TO_TIMESTAMP to your table's ora_rowscn if and only if there's a match. Otherwise you can display the SCN_TO_TIMESTAMP(MIN(SCN)) from sys.smon_scn_time as the earliest date the table was modified before.
+
+不过对于项目所要实现的功能没有太大的影响，因为要取的是更新的最新时间，长时间不更新，
+上面语句就会报异常，而在抛出异常时，不去更新最新时间就可以了，异常直接忽略掉。
+
 - 2016-05-12——获取文件的MD5值
 
 [StackOverflow相关问题](http://stackoverflow.com/questions/304268/getting-a-files-md5-checksum-in-java)
