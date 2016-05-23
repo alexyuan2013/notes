@@ -81,4 +81,12 @@ public static String getMD5OfFile(File file){
 于是就想到公用一个字段，将两种信息通过字符串分割，如'#'。但这样带来一个问题，就是
 当只使用某一个查询条件时，无法使用'='去判断，使用'like'判断时，又因为其中一个字段
 的长度不定，查询语句不好写。这时想到使用字符串分割函数`SUBSTR`：
+
+解决方法来自[问题](http://stackoverflow.com/questions/1197026/is-substr-or-like-faster-in-oracle)。
+
+``` sql
+SELECT * FROM my_table WHERE SUBSTR(my_field, -32, 32) = user_token
+```
+ 即选择my_field的最后32个字符作为比较字符，substr的第二个参数为开始位置，负值表示从末尾往前数，第三个参数为长度，substr的详细用法见[官方文档](https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions162.htm)。
+ 
  
