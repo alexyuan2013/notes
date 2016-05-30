@@ -53,3 +53,10 @@ SELECT * FROM my_table WHERE SUBSTR(my_field, -32, 32) = user_token
 ```
  即选择my_field的最后32个字符作为比较字符，substr的第二个参数为开始位置，负值表示从末尾往前数，第三个参数为长度，substr的详细用法见[官方文档](https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions162.htm)。
  
+ - 2016-05-30 Oracle数据显示为科学计数法导致导出数据时精度损失
+ 
+ 在PL/SQL中，Oracle的number型字段，位数大于16位时，会自动截断，采用科学计数法显示，
+ 这对程序中的查询语句没有影响，但是，当导出数据到sql文件时，依然还是采用这种科学
+ 计数法的形式，这样再导入到别的数据库中时，就会损失精度。解决的方法如下：
+ 
+ > 在pl/sql developer->tools->preferences->sql windows->number fields tochar,选中该选项即可。
