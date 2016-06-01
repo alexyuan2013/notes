@@ -46,3 +46,8 @@ public static String getMD5OfFile(File file){
 
 具体解决方法及websocket的创建，可以参见之前创建的[websocket示例](https://github.com/alexyuan2013/javaee-demos/blob/master/spring-mvc-websockets-master/README.md)
  
+参考资料：
+
+1. [https://spring.io/blog/2014/09/16/preview-spring-security-websocket-support-sessions](https://spring.io/blog/2014/09/16/preview-spring-security-websocket-support-sessions)
+2. [http://46aae4d1e2371e4aa769798941cef698.devproxy.yunshipei.com/linlzk/article/details/50153745](http://46aae4d1e2371e4aa769798941cef698.devproxy.yunshipei.com/linlzk/article/details/50153745)
+
