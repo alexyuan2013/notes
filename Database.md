@@ -60,3 +60,36 @@ SELECT * FROM my_table WHERE SUBSTR(my_field, -32, 32) = user_token
  计数法的形式，这样再导入到别的数据库中时，就会损失精度。解决的方法如下：
  
  > 在pl/sql developer->tools->preferences->sql windows->number fields tochar,选中该选项即可。
+
+ - 2016-06-15 Oracle定时向插入数据
+
+类似于触发器的功能，源于项目中需要模拟数据的需求，每小时或每天产生一条记录。简单来说就是采用数据库脚本的方式，用到的是`dbms_job`来完成：
+
+添加一个定时任务：
+
+```sql
+DECLARE jobno NUMBER;
+BEGIN
+  DBMS_JOB.submit(
+  job =>jobno,
+  what =>'insert into HIS_INTEGRITY_INFO (INTEGRITY_ID, DEV_SUM, DEV_BAD, RELAY_ID, DEPT_TYPE, DEPT_ID, INTEGRITY_STATUS, TIME, REMARK)
+values (dbms_random.value(100,999)*10000 + dbms_random.value(100,999)*19 , '||2048||', floor(dbms_random.value(80,160)), null, null, '||4504162577323917313||',null, sysdate, null);',
+  next_date => Sysdate,
+  interval => 'TRUNC(sysdate)+1+1/24'
+  );
+  COMMIT;
+END;
+```
+
+查看数据库当前的任务：
+
+``` sql
+select * from dba_jobs
+```
+删除任务：
+
+``` sql
+begin
+    dbms_job.remove(88);
+end;
+```
