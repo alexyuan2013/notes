@@ -130,13 +130,45 @@ function sendMyClientMessage() {
 至此，服务端和客户端的代码都已经完成，在Chrome或IE10上运行时，一切正常，但是在IE10一下版本时，就会报错。
 Spring提供了不支持WebSocket的解决方法，下边将介绍。
 
-#### 发布-订阅模式
+#### STOMP与发布-订阅模式
+
+上个例子并没有使用WebSocket的子协议，因此需要自己去解析消息的格式。这里将使用STOMP子协议来处理WebSocket的消息。
+假设，你需要开发一个聊天室应用，所有用户可以加入到一个聊天室，并且任何一个人发送的信息所有的人都能收到，
+这意味着我们需要一个主题，所有用户都可以订阅这个主题，所有订阅过主题的用户都会受到这个主题广播的消息。
+
+首先要做的是，让Spring支持STOMP。使用Spring 4，你可以很容易的创建一个简单的、轻量的消息代理（message broker），
+用来启动订阅，让controller中的方法可以处理客户端的消息。代码如下：
+
+```java
+@Configuration
+@EnableWebSocketMessageBroker
+public class ChatroomWebSocketMessageBorkerConfigurer extends AbstractWebSocketMessageBrokerConfigurer {
+  @Override
+  public void configureMessageBroker(MessageBrokerRegistry config) {
+    config.enableSimpleBroker("/chatroomTopic");//主题
+    config.setApplicationDestinationPrefixes("myApp");//前缀
+  }
+  @Override
+  public void registerStompEndPoints(StompEndpointRegistry registry) {
+    registry.addEndpoint("/broadcastMyMessage").withSockJS();
+  }
+}
+```
+重载的方法configureMessageBroker，做了如下配置：
+
+- setApplicationDestinationPrefixes，设定/myApp作为前缀，所有客户端的消息，只要目标是以/myApp为前缀的，
+都会被定向到对应的controller中的方法去处理
+
+- enableSimpleBroker，设定主题为/chatroomTopic，所有以/chatroomTopic为前缀的消息，都会被定向到对应的消息代理上。
+由于我们使用的是内存代理，主题可以设定为任意的；而对于专用的代理，目标名必须是/topic或者/queue，依据不同的订阅模式
+（pub/sub或者point-to-point）。
+
+重载的方法registerStompEndpoints，对端点和备选方案做了配置：
+
+- 客户端通过端点
 
 
-
-
-
-#### 发布-订阅模式——发送消息到单个用户
+#### 广播消息到单个用户
 
 
 
