@@ -165,8 +165,25 @@ public class ChatroomWebSocketMessageBorkerConfigurer extends AbstractWebSocketM
 
 重载的方法registerStompEndpoints，对端点和备选方案做了配置：
 
-- 客户端通过端点
+- 客户端通过端点/broadcastMyMessage连接到服务器，STOMP来负责消息格式的处理，不需要自己考虑。
 
+- .withSockJS()方法开启了Spring备选处理的选项，确保任意浏览器均可以成功的进行WebSocket通信。
+
+Spring MVC通过Controller来处理HTTP的请求，同样，对于WebSocket消息而言，也是在Controller中进行处理的。
+Controller可以用来接收客户的STOMP消息，消息处理可以通过向broker通道发送返回信息，在发送到订阅客户端进行。
+代码如下：
+
+```java
+@Controller
+public class ChatroomController {
+  @MessageMapping("/broadcastMyMessage")
+  @SendTo("/chatroomTopic/broadcastClientMesages")
+  public ReturnedDataModelBean broadCastClientMessage(ClientInfoBean message) throws Exception {
+    String returnedMessage = message.getClientName() + ": " + message.getClientMessage();
+    return new ReturnedDataModelBean(returnedMessage);
+  }
+}
+```
 
 #### 广播消息到单个用户
 
