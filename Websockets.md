@@ -184,7 +184,61 @@ public class ChatroomController {
   }
 }
 ```
+@MessageMapping与@RequestMapping的作用相同，作为一个消息地址的映射。
+返回值为ReturnedDataModelBean类型，其被发送给broker的订阅者。
+@SendTo表示将信息发送到对应的主题上。客户端并不会等待服务器的响应，因为客户端只是订阅了相应的主题，
+而不是直接和服务端交互。
 
+消息体的POJO如下：
+
+```java
+public class ClientInfoBean {
+  private String clientName;
+  private String clientMessage;
+  public String getClientMessage() {
+    return clientMessage;
+  }
+  public String getClientName() {
+    return clientName;
+  }
+}
+
+public class ReturnedDataModelBean {
+  private String returnedMessage;
+  public ReturnedDataModelBean(String returnedMessage) {
+    this.returnedMessage = returnedMessage;
+  }
+  public String getReturnedMessage() {
+    return returnedMessage;
+  }
+}
+```
+还可以添加一些简单的安全措施，如HTTP认证，代码如下：
+
+```java
+@Configuration
+@EnableGlobalMethodSecurity(prePostEnable=true)
+@EnableWebSecurity
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.httpBasic();
+    http.authorizeRequests().anyRequest().authenticated();
+  }
+  @AutoWired
+  void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+    auth.inMemoryAuthentication().withUser("user").password("password").roles("USER");
+  }
+}
+```
+客户端代码：
+```html
+<script src="sockjs-0.3.4.js"></script>
+<script src="stomp.js"></script>
+<script type="text/javascript">
+
+</script>
+```
 #### 广播消息到单个用户
 
 
