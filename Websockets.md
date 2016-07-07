@@ -236,9 +236,32 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 <script src="sockjs-0.3.4.js"></script>
 <script src="stomp.js"></script>
 <script type="text/javascript">
+function joinChatroom() {
+  var topic = '/chatroomTopic/broadcastClientsMessages';
+  var servicePath = '/broadcastMyMessage';
+  var socket = new SockJS(servicePath);
+  stompClient = Stomp.over(socket);
+  stompClient.connect('user', 'password', function(frame){
+    setJoined(true);
+    console.log('Joined Chatroom: ' + frame);
+    stompClient.subscribe(topic, function(serverReturnedData){
+      renderServerReturnedData(JSON.parse(serverReturnedData.body).returnedMessage);
+    });
+  });
+}
 
+function sendMyClientMessage() {
+  var serviceFullPath = '/myApp/broadcastMyMessage';
+  var myText = document.getElementById('myText').value;
+  stompClient.send(serviceFullPath, {}, JSON.stringify({'clientName': 'Client-' + randomnumber,
+    'clientMessage': myText}));
+  document.getElementById('myText').value = '';
+}
 </script>
 ```
+SockJS的客户端向服务端建立连接时，会首先发送GET/info的命令，来获取服务端的连接信息，
+从而决定使用WebSocket，还是HTTP流，或者HTTP长链接等协议。WebSocket是首选，当不支持时，
+选择HTTP流，最差的情况选择HTTP长链接。
 #### 广播消息到单个用户
 
 
