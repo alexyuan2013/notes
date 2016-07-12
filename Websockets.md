@@ -264,7 +264,17 @@ SockJS的客户端向服务端建立连接时，会首先发送GET/info的命令
 选择HTTP流，最差的情况选择HTTP长链接。
 #### 广播消息到单个用户
 
+假设你要开发一个自动应答系统，即用户发送信息到服务端，服务端自动返回信息。
+该功能的实现和上面广播到多个用户没有太大的区别，只需要修改一下endpoint配置和客户端的代码即可。
 
+```java
+@Configuration
+@EnableWebSocketMessageBroker
+public class AutoAnsweringWebSocketMessageBrokerConfigurer extends 
+AbstractWebSocketMessageBrokerConfigurer {
+  @
+}
+```
 
 
 [1]: https://zh.wikipedia.org/wiki/WebSocket "维基百科"
