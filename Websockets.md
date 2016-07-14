@@ -270,11 +270,93 @@ SockJS的客户端向服务端建立连接时，会首先发送GET/info的命令
 ```java
 @Configuration
 @EnableWebSocketMessageBroker
-public class AutoAnsweringWebSocketMessageBrokerConfigurer extends 
-AbstractWebSocketMessageBrokerConfigurer {
-  @
+public class AutoAnsweringWebSocketMessageBrokerConfigurer extends AbstractWebSocketMessageBrokerConfigurer {
+
+	@Override
+	public void configureMessageBroker(MessageBrokerRegistry config) {
+		config.setApplicationDestinationPrefixes("/app");
+		config.enableSimpleBroker("/queue");
+		config.setUserDestinationPrefix("/user");
+	}
+
+
+	@Override
+	public void registerStompEndpoints(StompEndpointRegistry registry) {
+		registry.addEndpoint("/message").withSockJS();
+	}
+}
+```
+Controller的代码如下：
+
+``` java
+@Controller
+public class AutoAnsweringController {
+
+    @Autowired
+    AutoAnsweringService autoAnsweringService;
+
+    @MessageMapping("/message")
+    @SendToUser
+    public String sendMessage(ClientInfoBean message) {
+        return autoAnsweringService.answer(message);
+    }
+
+
+    @MessageExceptionHandler
+    @SendToUser(value = "/queue/errors", broadcast = false)
+    String handleException(Exception e) {
+        return "caught ${e.message}";
+    }
 }
 ```
 
+应答处理逻辑代码：
+
+```java
+@Service
+public class AutoAnsweringServiceImpl implements  AutoAnsweringService {
+    @Override
+    public String answer(ClientInfoBean bean) {
+        StringBuilder mockBuffer=new StringBuilder();
+        mockBuffer.append(bean.getClientName())
+                .append(", we have received the message:")
+                .append(bean.getClientMessage());
+        return  mockBuffer.toString();
+    }
+}
+```
+客户端的代码如下:
+
+``` javascript
+ function connectService() {
+    var servicePath='/message';
+    var socket = new SockJS(servicePath);
+    stompClient = Stomp.over(socket);            
+    stompClient.connect({}, function(frame) {
+        setIsJoined(true);
+        stompClient.subscribe('/user/queue/message', function(message) {
+        renderServerReturnedData(message.body);
+      });
+      stompClient.subscribe('/user/queue/error', function(message) {
+            renderReturnedError(message.body);
+          });
+    });
+}
+function disconnectService() {
+    if (stompClient != null) {
+        stompClient.disconnect();
+    }
+    setIsJoined(false);
+    console.log("disconnect");
+}
+
+function sendMyClientMessage() {
+    var serviceFullPath='/app/message';
+    var myText = document.getElementById('myText').value;
+    stompClient.send(serviceFullPath, {}, JSON.stringify({ 'clientName': 'Client-'+randomnumber, 'clientMessage':myText}));
+    document.getElementById('myText').value='';
+}
+```
+这样，只有主动向服务器发送请求的用户才会收到服务器的应答，虽然客户端都订阅了同一个主题。
 
 [1]: https://zh.wikipedia.org/wiki/WebSocket "维基百科"
