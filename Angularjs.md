@@ -118,8 +118,8 @@ document.getElementById("updateTimeButton")
 ```
 也可以使用$apply()：
 ```javascript
-document.getElementById("updateTimeButton).addEventListener('click', function(){
-  $scope.$apply(function(){//在$apply()中更新时间，标签更新
+document.getElementById("updateTimeButton").addEventListener('click', function(){
+  $scope.$apply(function(){ //在$apply()中更新时间，标签更新
     console.log("update time clicked");
     $scope.data.time = new Date();
   });
