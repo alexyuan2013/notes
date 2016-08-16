@@ -1,6 +1,7 @@
 # 目录
 1. [$broadcast $emit $on的用法](#broadcast-emit-on)
 1. [$watch $apply $digest的用法](#watch-apply-digest)
+1. [$q的用法](#q-promise)
 
 <div id="broadcast-emit-on"></div>
 
@@ -128,4 +129,178 @@ document.getElementById("updateTimeButton").addEventListener('click', function()
 更多：
 - [AngularJS $watch() , $digest() and $apply()](http://tutorials.jenkov.com/angularjs/watch-digest-apply.html)
 - [Angularjs Developer Guide-Integration with the browser event loop](https://docs.angularjs.org/guide/scope)
-## 
+
+<div id="q-promise"></div>
+
+## $q的用法
+
+JavaScript是单线程的，所以为了避免线程阻塞，其天生就是异步执行的。但有的时候我们需要等待一个动作的结果之后再执行另一个结果，
+比如ajax请求之后根据返回的结果执行下一个动作，这个动作又可能是一个ajax请求。通常情况下，我们只能嵌套这些ajax请求，
+在上一层的回调函数中嵌套执行ajax请求。这样的代码结构看起来很不清晰，更谈不上优雅。
+
+于是，在angularjs中，引入了$q。$q是一个服务（service），它可以异步地执行方法，并且在完成处理后返回处理的结果。
+
+### $q的构造
+
+$q的构造方式有两种，一种是ES6的现代风格，一种是传统JS的一般风格：
+
+```javascript
+// for the purpose of this example let's assume that variables `$q` and `okToGreet`
+// are available in the current lexical scope (they could have been injected or passed in).
+function asyncGreet(name) {
+  // perform some asynchronous operation, resolve or reject the promise when appropriate.
+  return $q(function(resolve, reject) {
+    setTimeout(function() {
+      if (okToGreet(name)) {
+        resolve('Hello, ' + name + '!');
+      } else {
+        reject('Greeting ' + name + ' is not allowed.');
+      }
+    }, 1000);
+  });
+}
+
+var promise = asyncGreet('Robin Hood');
+promise.then(function(greeting) {
+  alert('Success: ' + greeting);
+}, function(reason) {
+  alert('Failed: ' + reason);
+});
+```
+以上就是现代风格的构造方式，直接通过$q的构造函数生成对象。
+
+```javascript
+// for the purpose of this example let's assume that variables `$q` and `okToGreet`
+// are available in the current lexical scope (they could have been injected or passed in).
+function asyncGreet(name) {
+  var deferred = $q.defer();
+
+  setTimeout(function() {
+    deferred.notify('About to greet ' + name + '.');
+
+    if (okToGreet(name)) {
+      deferred.resolve('Hello, ' + name + '!');
+    } else {
+      deferred.reject('Greeting ' + name + ' is not allowed.');
+    }
+  }, 1000);
+
+  return deferred.promise;
+}
+
+var promise = asyncGreet('Robin Hood');
+promise.then(function(greeting) {
+  alert('Success: ' + greeting);
+}, function(reason) {
+  alert('Failed: ' + reason);
+}, function(update) {
+  alert('Got notification: ' + update);
+});
+```
+传统的代码要相对好理解，首先是通过$q.defer()生成一个延时对象，然后再在延时函数中处理结果，
+并通过延时对象的resolve和reject方法分别保存执行成功和失败的结果，最后返回延时的promise对象。
+在外部使用promise对象，通过then()方法来获取相应的返回结果。个人比较倾向于使用这种构造方式。
+
+### 延时对象deferred的接口
+
+- 方法
+  - resolve(value) 导出处理结果到promise对象
+  - reject(reason) 导出处理失败原因到promise对象
+  - notify(value) 提供promise对象当前的执行状态，可能会调用多次，至于其调用的频率，大概是一秒
+
+- 属性
+  - promise 延时对象关联的promise对象
+
+### 许诺对象promise的接口
+
+- 方法
+  - then(successCallback, [errorCallback], [notifyCallback]) successCallback为必须的回调函数
+  errorCallback和notifyCallback两个回调函数是可选的。
+  - catch(errorCallback) 等同于then(null, errorCallback)
+  - finally(callback, notifyCallback) 不管结果是resolve还是reject，均调用该方法
+
+### promise对象的链式操作
+
+通过then方法的调用，返回的依然是一个promise对象，因此promise具备了链式操作的功能：
+
+```javascript
+var details {  
+   username: null,
+   profile: null,
+   permissions: null
+};
+
+$http.get('/api/user/name')
+  .then(function(response) {
+     // Store the username, get the profile.
+     details.username = response.data;
+     return $http.get('/api/profile/' + details.username);
+  })
+  .then(function(response) {
+      //  Store the profile, now get the permissions.
+    details.profile = response.data;
+    return $http.get('/api/security/' + details.username);
+  })
+  .then(function(response) {
+      //  Store the permissions
+    details.permissions = response.data;
+    console.log("The full user details are: " + JSON.stringify(details);
+  });
+```
+上面$http.get()就是一个promise对象，链式操作依次获取了username, proifle, persmissions三个属性。
+
+### $q.all()等待所有的promise对象，或promise链
+
+有时候，我们需要等待所有的异步操作完成后，再执行某个动作，这个时候可以使用$q.all方法，
+代码如下
+
+```javascript
+app.controller('MainCtrl', function($scope, $q, $timeout) {
+    //得到三个延时对象
+    var one = $q.defer();
+    var two = $q.defer();
+    var three = $q.defer();  
+
+    //对应的延时操作
+    $timeout(function () {
+        one.resolve("one done");
+    }, Math.random() * 1000);
+
+    $timeout(function () {
+        two.resolve("two done");
+    }, Math.random() * 1000);
+
+    $timeout(function () {
+        three.resolve("three done");
+    }, Math.random() * 1000);
+
+    //使用$q.all来监听所有的promise执行
+    $q.all([one.promise, two.promise, three.promise]).
+      then(function() {
+        console.log("ALL INITIAL PROMISES RESOLVED");
+    });
+
+    //成功的回调函数
+    function success(data) {
+        console.log(data);
+        return data + "Chained";
+    }
+
+    //定义三个promise链
+    var oneChain = one.promise.then(success).then(success);
+    var twoChain = two.promise.then(success);
+    var threeChain = three.promise.then(success).then(success).then(success);
+    //$q.all来监听所有的promise链
+    $q.all([oneChain, twoChain, threeChain]).
+      then(function(){
+        console.log("All PROMISES CHAIN RESOLVED");
+    });
+
+});
+```
+更多：
+- [Angularjs API Reference - $q](https://docs.angularjs.org/api/ng/service/$q)
+- [Promises in angularjs - The definitive guid](http://www.dwmkerr.com/promises-in-angularjs-the-definitive-guide/)
+- [Stackoverflow - Wait for all promises to resolve](http://stackoverflow.com/questions/21759361/wait-for-all-promises-to-resolve)
+
+
