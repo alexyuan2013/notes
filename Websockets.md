@@ -36,7 +36,7 @@ WebSocket的服务端的实现最流行可能不是Spring，不过由于第一�
 从Spring 4开始加入了对WebSocket的支持，其将诸多概念，如消息传递（messaging）、通道（channel）、处理器（handler）等，
 集成到了消息映射（message mapping）的注解（annotation）中。你可以使用Spring创建一个简单的不基于任何子协议的WebSocket
 对话，那么你要自己处理消息传递的格式；也可以使用STOMP向所有客户端广播消息或仅仅向某个客户端发送消息。
-接下来就一次介绍这三种方式的实现：
+接下来就依次介绍这三种方式的实现：
 
 #### 简单的WebSocket应用
 
