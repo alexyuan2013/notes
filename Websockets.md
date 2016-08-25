@@ -127,7 +127,7 @@ function sendMyClientMessage() {
   document.getElementById('myText').value='';
 }
 ```
-至此，服务端和客户端的代码都已经完成，在Chrome或IE10上运行时，一切正常，但是在IE10一下版本时，就会报错。
+至此，服务端和客户端的代码都已经完成，在Chrome或IE10上运行时，一切正常，但是在IE10以下版本时，就会报错。
 Spring提供了不支持WebSocket的解决方法，下边将介绍。
 
 #### STOMP与发布-订阅模式
