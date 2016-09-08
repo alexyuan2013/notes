@@ -1,6 +1,6 @@
-## 对WebSocket的学习与总结
+# 对WebSocket的学习与总结
 
-### 背景
+## 背景
 
 Web应用的构建思路很简单，即一个单向的信息交流：客户端向服务端发送请求，服务端向客户端返回请求的结果，客户端再渲染结果。
 这种交流始于客户端请求，止于服务端返回结果。
@@ -30,7 +30,7 @@ WebSocket通过帧来传递数据，文本和二进制之间只有很小的差�
 的一个子协议。
 
 
-### Spring与WebSocket
+## Spring与WebSocket
 
 WebSocket的服务端的实现最流行可能不是Spring，不过由于第一个项目原因，还是采用了相对比较熟悉的Spring来实现。
 从Spring 4开始加入了对WebSocket的支持，其将诸多概念，如消息传递（messaging）、通道（channel）、处理器（handler）等，
@@ -358,5 +358,157 @@ function sendMyClientMessage() {
 }
 ```
 这样，只有主动向服务器发送请求的用户才会收到服务器的应答，虽然客户端都订阅了同一个主题。
+
+
+## socket.io实现的websocket
+
+socket.io是基于nodejs实现的websocket，相对spring的实现而言，nodejs对websocket的实现更加纯粹和灵活。
+
+### socket.io的使用
+
+
+### socket.io对点对点通信的支持
+
+由服务器端主动向某个特定的用户发送信息是websocket应用中的一个“非典型”的应用场景，一般的应用，比如赛事直播聊天室，使用websocket是用来广播消息，即所有的用户收到的都是相同的信息。
+向特定用户发送信息这种类似与点对点的通信功能，需要额外的做一些工作。
+stackoverflow上也有这样的[问题](http://stackoverflow.com/questions/17476294/how-to-send-a-message-to-a-particular-client-with-socket-io?answertab=votes#tab-top)及解决方案，这里对此介绍一下socket.io实现的两种方式：
+
+- 手动维护一个连接列表
+
+最简单的想法，在服务端维护一个客户端连接的列表，当客户端连接到服务端时，将该连接保存在列表中；断开连接时，将连接从列表中删除，代码如下：
+
+``` javascript
+server.js:
+var
+    io = require('socket.io'),
+    ioServer = io.listen(8000),
+    sequence = 1;
+    clients = [];
+// Event fired every time a new client connects:
+ioServer.on('connection', function(socket) {
+    console.info('New client connected (id=' + socket.id + ').');
+    clients.push(socket);
+
+    // When socket disconnects, remove it from the list:
+    socket.on('disconnect', function() {
+        var index = clients.indexOf(socket);
+        if (index != -1) {
+            clients.splice(index, 1);
+            console.info('Client gone (id=' + socket.id + ').');
+        }
+    });
+});
+
+// Every 1 second, sends a message to a random client:
+setInterval(function() {
+    var randomClient;
+    if (clients.length > 0) {
+        randomClient = Math.floor(Math.random() * clients.length);
+        clients[randomClient].emit('foo', sequence++);
+    }
+}, 1000);
+
+client.js:
+var
+    io = require('socket.io-client'),
+    ioClient = io.connect('http://localhost:8000');
+
+ioClient.on('foo', function(msg) {
+    console.info(msg);
+});
+```
+
+上面有个很明显的缺点，就是没有绑法判断连接列表中的连接具体时属于哪个特定的客户端，这时就需要客户端传递过来一个唯一的标识，如邮箱、用户id、token等，保证连接的唯一性。
+
+```javascript
+server.js:
+var
+    io = require('socket.io'),
+    ioServer = io.listen(8000),
+    sequence = 1;
+    users = { };
+//在连接事件中将user及对应的websocket连接加入到列表中
+ioServer.on('connection', function(socket) {
+    //监听登录事件，将socket连接与用户email绑定
+    socket.on('login', function(data){
+        users[data.email] = socket; //
+    });
+    // When socket disconnects, remove it from the list:
+    socket.on('disconnect', function() {
+        //遍历users列表，删除当前socket连接对应的key
+        for(var email in users){
+            if(users.email === socket){
+                delete users.email;
+            }
+        }
+    });
+});
+
+// Every 1 second, sends a message to a userA:
+setInterval(function() {
+   users['userA@example.com'].emit('foo', sequence++));    
+}, 1000);
+
+
+client.js:
+var
+    io = require('socket.io-client'),
+    ioClient = io.connect('http://localhost:8000');
+
+ioClient.on('connection', function(client){
+    //向服务端发送login事件
+    client.emit('login', { email: 'userA@example.com', message: 'userA login' });
+});
+
+ioClient.on('foo', function(msg){
+    console.info(msg);
+});
+
+```
+上面的代码同样存在问题：
+1. When user disconnects you have to clean up 'users' object 
+2. It doesnt support second connection - for instance from another browser.
+
+- 使用socket.io的rooms
+
+You can use socket.io rooms.
+From the client side emit an event ("join" in this case,
+can be anything) with any unique identifier (email, id).
+
+Client端代码：
+```javascript
+var socket = io.connect('http://localhost');
+socket.emit('join', {email: user1@example.com});
+```
+服务端代码：
+```javascript
+var io = require('socket.io').listen(80);
+
+io.sockets.on('connection', function (socket) {
+  socket.on('join', function (data) {
+    socket.join(data.email); // We are using room of socket io
+  });
+});
+```
+So, now every user has joined a room named after user's email.
+So if you want to send a specific user a message you just have to
+
+Server Side:
+```javascript
+io.sockets.in('user1@example.com').emit('new_msg', {msg: 'hello'});
+```
+The last thing left to do on the client side is listen to the "new_msg" event.
+
+Client Side:
+```javascript
+socket.on("new_msg", function(data) {
+    alert(data.msg);
+}
+```
+
+
+
+
+
 
 [1]: https://zh.wikipedia.org/wiki/WebSocket "维基百科"
