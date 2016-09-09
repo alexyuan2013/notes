@@ -466,8 +466,9 @@ ioClient.on('foo', function(msg){
 
 ```
 上面的代码同样存在问题：
-1. When user disconnects you have to clean up 'users' object 
-2. It doesnt support second connection - for instance from another browser.
+
+> 1. When user disconnects you have to clean up 'users' object，
+> 2. It doesnt support second connection - for instance from another browser.
 
 - 使用socket.io的rooms
 
