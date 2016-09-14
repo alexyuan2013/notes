@@ -2,6 +2,7 @@
 1. [$broadcast $emit $on的用法](#broadcast-emit-on)
 1. [$watch $apply $digest的用法](#watch-apply-digest)
 1. [$q的用法](#q-promise)
+1. [directive的用法](#directive)
 
 <div id="broadcast-emit-on"></div>
 
@@ -302,5 +303,19 @@ app.controller('MainCtrl', function($scope, $q, $timeout) {
 - [Angularjs API Reference - $q](https://docs.angularjs.org/api/ng/service/$q)
 - [Promises in angularjs - The definitive guid](http://www.dwmkerr.com/promises-in-angularjs-the-definitive-guide/)
 - [Stackoverflow - Wait for all promises to resolve](http://stackoverflow.com/questions/21759361/wait-for-all-promises-to-resolve)
+
+
+<div id="directive"></div>
+
+## Directive的用法
+
+### Directive是干嘛的
+
+Directive作为对DOM元素（包括属性、元素、css类、注释等）的一种标签，告诉Angularjs的HTML
+compiler如何将特定的行为附加到对应的DOM元素或者其子元素上。说白了就是对HTML元素的一种扩展。
+
+Angularjs有许多内建的的directive，例如ngBind、ngModel、ngClass等，你也可以像创建controller、
+service那样创建自己的directive。
+
 
 
