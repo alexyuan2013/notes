@@ -13,6 +13,7 @@ controller之间是层次关系，当在内层的controller中触发了一个事
 中没办法完成上层controller的操作。angular给出的解决方案是通过$emit
 向上层controller传递（向下层传递则使用$broadcast），而在目标controller
 中监听到相应的$emit或$broadcast的事件，则需要使用$on方法。示例代码：
+
 ```javascript
 angular.module('TestApp', ['ng'])
 .controller('ParentCtrl', function($scope) {
@@ -31,6 +32,7 @@ angular.module('TestApp', ['ng'])
 })
 ;
 ```
+
 ```html
 <body ng-app="TestApp">
     <div ng-controller="ParentCtrl">
@@ -247,13 +249,13 @@ $http.get('/api/user/name')
     details.permissions = response.data;
     console.log("The full user details are: " + JSON.stringify(details);
   });
-```
+  ```
 上面$http.get()就是一个promise对象，链式操作依次获取了username, proifle, persmissions三个属性。
 
 ### $q.all()等待所有的promise对象，或promise链
 
 有时候，我们需要等待所有的异步操作完成后，再执行某个动作，这个时候可以使用$q.all方法，
-代码如下
+代码如下:
 
 ```javascript
 app.controller('MainCtrl', function($scope, $q, $timeout) {
@@ -299,6 +301,7 @@ app.controller('MainCtrl', function($scope, $q, $timeout) {
 
 });
 ```
+
 更多：
 - [Angularjs API Reference - $q](https://docs.angularjs.org/api/ng/service/$q)
 - [Promises in angularjs - The definitive guid](http://www.dwmkerr.com/promises-in-angularjs-the-definitive-guide/)
@@ -315,7 +318,53 @@ Directive作为对DOM元素（包括属性、元素、css类、注释等）的�
 compiler如何将特定的行为附加到对应的DOM元素或者其子元素上。说白了就是对HTML元素的一种扩展。
 
 Angularjs有许多内建的的directive，例如ngBind、ngModel、ngClass等，你也可以像创建controller、
-service那样创建自己的directive。
+service那样创建自己的directive。当Angular启动应用时，HTML编译器会遍历所有匹配DOM的directive，
+并将其与相应的DOM元素对应。
+
+### 匹配Directive
+
+在我们编写directive之前，需要知道HTML编译器如何决定何时使用某个给定的directive。
+
+与元素选择器类似，当directive作为元素声明的一部分时，我们称这个元素与directive相匹配。
+
+下面的两个例子中，我们称\<input\>元素于ngModel指令相匹配：
+```html
+<input ng-model="foo">
+<input data-ng-model="foo">
+```
+下面的例子中，元素于person指令相匹配：
+```html
+<person>{{name}}</person>
+```
+
+### 归一化处理
+
+Angular会将与指令相匹配的元素的标签名和属性名进行归一化处理，我们之前提到的几个指令，
+如ngModel，就是经过归一化处理后的结果，即为大小写敏感的驼峰命名法。然而，HTML是大小写不敏感的，
+因此，我们在DOM里边匹配指令的时候一般是写成小写的形式，并且用“-”作为连接符，如ng-model。
+
+归一化处理的一般步骤：
+
+- 从元素或属性名中，删除`x-`或者`data-`的前缀
+- 将`:`、`-`、`_`转换成驼峰命名法的形式  
+
+以下集中写法是等价的，均匹配了ngBind指令：
+```html
+<div ng-controller="Controller">
+  Hello <input ng-model='name'> <hr/>
+  <span ng-bind="name"></span> <br/>
+  <span ng:bind="name"></span> <br/>
+  <span ng_bind="name"></span> <br/>
+  <span data-ng-bind="name"></span> <br/>
+  <span x-ng-bind="name"></span> <br/>
+</div>
+```
+
+> 最佳实践：以上集中形式，我们推荐使用`-`连接的形式，即ng-bind来匹配ngBind，
+如果你使用了HTML语法检查工具，则需要加上`data-`前缀，即data-ng-bind来匹配ngBind。
+其他集中形式虽然在语法上是符合的，但是我们并不推荐使用。
+
+
 
 
 
