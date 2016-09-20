@@ -371,7 +371,83 @@ Angular会将与指令相匹配的元素的标签名和属性名进行归一化�
 
 ```html
 <my-dir></my-dir>
+<span my-dir="exp"></span>
+<!-- directive: my-dir exp -->
+<span class="my-dir: exp;"></span>
 ```
+
+> **最佳实践**：使用标签名和属性名来匹配directive，而不是注释和类名，这样匹配显得更加清晰。
+
+> **最佳实践**：用注释匹配用在DOM创建directive受限时，如跨越多个元素(比如\<table\>元素)。 
+AngularJS 1.2 引入了ng-repeat-start和ng-repeat-end指令，作为更好的解决方案。 
+建议开发者使用这种方式，而不要用“自定义注释”形式的指令。
+
+### 创建指令
+
+首先来看看指令注册的API，同controller一样，directive也注册在module之上，即必须使用module.directive
+API，该接口接收一个归一化的指令名和一个工厂方法。这个工厂方法要返回一个带有不同配置的object，
+用于告诉`$compile`指令的具体行为是怎样的。
+
+工厂方法只在`$compile`配置指令时调用一次，你可以在这里做一些初始化的工作。该函数使用`$injector.invoke`调用，所以它可以像控制器一样进行依赖注入。
+
+> **最佳实践**：尽量返回一个对象，而不是仅仅返回一个函数。
+
+> **最佳实践**：为了避免指令名与内建指令或者HTML的标签名重复，最好给指令名加上前缀，
+两到三字符就可以，但是同样记得不要使用ng作为前缀，这样可能会和Angular未来的扩展冲突。
+最简单的，可以使用my最为前缀。
+
+### 用模板来扩展指令
+
+假设你有大量表示用来呈现用户信息的模板，而且会重复出现在多个地方，一旦你修改了某一处的代码，
+你就需要将所有的用到它的地方全部修改一遍，这时，就是指令使用的一个很好的机会。
+
+你可以将HTML模板直接写在指令的代码中，也可以通过templateUrl来加载.html文件，
+建议使用后者，除非你的模板代码很简单。
+
+```javascript
+angular.module('docsTemplateUrlDirective', [])
+.controller('Controller', ['$scope', function($scope) {
+  $scope.customer = {
+    name: 'Naomi',
+    address: '1600 Amphitheatre'
+  };
+}])
+.directive('myCustomer', function() {
+  return {
+    restrict: 'E',
+    scope: {
+      customerInfo: '=info'
+    },
+    templateUrl: 'my-customer.html'
+  };
+});
+```
+restrict选项用来设置指令匹配的对象，即：
+
+- 'A' - 仅匹配属性
+- 'E' - 仅匹配标签
+- 'C' - 仅匹配类名
+- 'M' - 仅匹配注释
+- 'AEC' - 匹配属性、标签或类名
+
+> 何时使用元素标签及属性名？使用元素标签创建指令时，表示你有自己定义的HTML模板，
+而如果你的目的仅仅是扩展一个标签的行为则最好使用属性名来匹配。
+
+### 作用域隔离
+
+在未配置的情况下，指令使用的变量的作用域为其所在的controller的作用域，如果想在同一个
+controller中使用多个相同的指令，则必须要将指令的作用域与外界的controller的作用隔离。
+
+
+
+
+
+
+
+
+
+
+
 
 
 
