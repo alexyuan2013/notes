@@ -438,9 +438,36 @@ restrict选项用来设置指令匹配的对象，即：
 在未配置的情况下，指令使用的变量的作用域为其所在的controller的作用域，如果想在同一个
 controller中使用多个相同的指令，则必须要将指令的作用域与外界的controller的作用隔离。
 
+使用`scope: {customerInfo: '=info'}`或其简写`scope：{customerInfo: '='}`将指令的作用域与外部隔离。
+不使用作用域隔离，指令将继承父类的作用域，使用作用域隔离可以避免除传入其中的数据模型之外的其他任何操作对指令内部的行为的影响。
+
+### 创建操作DOM的指令
+
+指令通过`link`选项来注册DOM监听和更新DOM，`link`函数在模板复制好后执行，指令的代码逻辑应该放到这边。
+`link`的定义如下：
+`function link(scope, element, attrs, controller, transcludeFn) { ... }`：
+
+- `scope` - Angular的作用域对象
+- `element` - 指令匹配的jqLite封装的元素(angular内部实现的类jquery的库)
+- `attrs` - 归一化处理过的属性名与值的键值对
+- `controller` - 传入的controller对象或者自身所在的controller对象
+- `transcludeFn` - 转制函数，预先将指令绑定到正确的转制作用域
+
+### 创建包含其他元素的指令
+
+
+### 给指令添加事件监听
 
 
 
+### 指令之间的通信
+
+### 总结
+
+### 更多
+
+- [Angularjs Developer Guide - Directive](https://docs.angularjs.org/guide/directive)
+- [Angularjs API - $compile](https://docs.angularjs.org/api/ng/service/$compile)
 
 
 
