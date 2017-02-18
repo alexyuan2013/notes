@@ -95,8 +95,21 @@ btn.setOnClickListener(new View.OnClickListener() {
   * [how to hide app's icon correctly?](http://stackoverflow.com/questions/35098439/how-to-hide-apps-icon-correctly)
   * [How to change android version and code version number in Android Studio?](http://stackoverflow.com/questions/22274657/how-to-change-android-version-and-code-version-number-in-android-studio)
 
+## 2. 在Android原生项目中嵌入CordovaWebView以集成Ionic工程
 
+这种方式是Cordova官方给出的方式，这里做了一些简化的处理，基本是对官方文档的一个翻译。
 
+1. 下载最新的Cordova发布版本，从[官网](https://dist.apache.org/repos/dist/release/cordova/platforms/)找到Android平台对应的发布版本，解压备用。
+2. 打开`/framework`目录，使用`ant jar`进行打包，得到`/framework/cordova-x.x.x.jar`文件。
+3. 复制`.jar`文件到Android原生项目的`libs`中。
+4. 这一步官方文档是采用自己重新实现类似于`CorodovaActivity`的Activity，这里我们不采用这种方式，因为Ionic工程已经通过`extends`的方式实现了一个`MainActivity`，我们可以直接使用这个`Activity`。
+5. 将Ionic工程所用到的Cordova插件的源代码复制到原生工程的`src`目录下，同时，由于这些插件可能还引入了其他的`jar`包，需要将Ionic工程中`libs`下的所有`jar`包复制到原生应用的`libs`下，否则Cordova会初始化失败。
+6. 将Ionic的`www`文件夹复制到原生工程的`assets`目录下，如果没有`assets`目录，请使用Android Studio自行新建一个。
+7. 将Ionic中的`/res/xml/config.xml`文件复制到原生工程的对应目录下，如果没有`xml`目录，请自行创建。
+
+至此，Android原生项目就可以通过`Intent`的方式来启动已有的Ionic工程。
+
+实际上，Ionic通过`ionic run android`命令以后所生成的项目已经是一个Android原生的项目，代码级的集成相对来说也比较容易。
 
 
 
