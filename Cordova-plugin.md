@@ -177,3 +177,60 @@ public boolean execute(String action, JSONArray args, final CallbackContext call
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 </config-file>
 ```
+- 运行时权限
+
+Android系统从6.0开始，介绍一种全新的权限模型，允许用户在App运行时进行权限的申请；Cordova从5.0开始支持这一新的权限申请模型。可以通过下面的方法进行申请：
+```
+cordova.requestPermission(CordovaPlugin plugin, int requestCode, String permission);
+```
+其中，`plugin`一般就是类本身，即`this`；`requestCode`为一个权限的编码，用户可以自己定义，据我的理解是，当一个插件有多个权限需要申请时，用`requestCode`作不同权限的标识；`permission`对应于`Manifest.permission`中定义好的权限字符串。以下为一段示例代码：
+```java
+//定义一个READ权限
+public static final String READ = Manifest.permission.READ_CONTACTS;
+//定义requestCode
+public static final int SEARCH_REQ_CODE = 0;
+//检查权限
+if(cordova.hasPermission(READ))
+{
+    //执行任务
+    search(executeArgs);
+}
+else
+{
+    //申请权限
+    getReadPermission(SEARCH_REQ_CODE);
+}
+//申请权限方法
+protected void getReadPermission(int requestCode)
+{
+    cordova.requestPermission(this, requestCode, READ);
+}
+//申请权限后，onRequestPermissionResult()方法将响应用户的操作：允许或者不允许
+public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException
+{
+    for(int r:grantResults)
+    {
+        if(r == PackageManager.PERMISSION_DENIED)
+        {
+            this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+            return;
+        }
+    }
+    switch(requestCode)
+    {
+        case SEARCH_REQ_CODE:
+            search(executeArgs);
+            break;
+        case SAVE_REQ_CODE:
+            save(executeArgs);
+            break;
+        case REMOVE_REQ_CODE:
+            remove(executeArgs);
+            break;
+    }
+}
+```
+- Reference
+  - [Plugin Development Guide](http://cordova.apache.org/docs/en/latest/guide/hybrid/plugins/index.html)
+  - [Android Plugin Development Guide](http://cordova.apache.org/docs/en/latest/guide/platforms/android/plugin.html)
+  - 感谢[chenliyu](https://github.com/chenliyu)提供的文档参考
